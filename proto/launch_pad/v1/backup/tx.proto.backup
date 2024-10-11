@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package launch_pad.v1;
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
+
+option go_package = "github.com/memehero/interchain-security/v1/x/launch_pad/types";
+
+service Msg {
+  rpc CreatePool(MsgCreatePool) returns (MsgCreatePoolResponse);
+  rpc SwapExactIn(MsgSwapExactIn) returns (MsgSwapExactInResponse);
+  rpc SwapExactOut(MsgSwapExactOut) returns (MsgSwapExactOutResponse);
+}
+
+message MsgCreatePool {
+  option (cosmos.msg.v1.signer) = "creator";
+
+  string tokenDenom = 1;
+  string amount = 2;
+  string creator = 3;
+  string nativeDenom = 5;
+  bool isNativeIn = 6;
+  cosmos.base.v1beta1.Coin value = 7;
+}
+
+message MsgCreatePoolResponse {
+
+}
+
+message MsgSwapExactIn {
+  option (cosmos.msg.v1.signer) = "sender";
+
+  uint64 id = 1;
+  string amountIn = 2;
+  string minimumReceive = 3;
+  bool isBuyToken = 4;
+  string sender = 5;
+  cosmos.base.v1beta1.Coin amount = 6;
+}
+
+message MsgSwapExactInResponse {
+
+}
+
+message MsgSwapExactOut {
+  option (cosmos.msg.v1.signer) = "sender";
+
+  uint64 id = 1;
+  string amountOut = 2;
+  string maximumPay = 3;
+  bool isBuyToken = 4;
+  string sender = 5;
+  cosmos.base.v1beta1.Coin amount = 6;
+}
+
+message MsgSwapExactOutResponse {
+
+}

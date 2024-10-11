@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package launch_pad.v1;
+
+option go_package = "github.com/memehero/interchain-security/v1/x/launch_pad/types";
+
+service Query {
+  rpc Pools(QueryPools) returns (QueryPoolsResponse);
+  rpc Pool(QueryPool) returns (QueryPoolResponse);
+  rpc PoolParams(QueryPoolParams) returns (QueryPoolParamsResponse);
+  rpc PoolAmount(QueryPoolAmount) returns (QueryPoolAmountResponse);
+}
+
+message QueryPools {
+
+}
+
+message QueryPoolsResponse {
+
+}
+
+message QueryPool {
+  uint64 id = 1;
+}
+
+message QueryPoolResponse {
+
+}
+
+message QueryPoolAmount {
+  uint64 id = 1;
+}
+
+message QueryPoolAmountResponse {
+
+}
+
+message QueryPoolParams {
+
+}
+
+message QueryPoolParamsResponse {
+
+}

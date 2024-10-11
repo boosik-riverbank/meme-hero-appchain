@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package launch_pad.v1;
+
+option go_package = "github.com/memehero/interchain-security/v1/x/launch_pad/types";
+
+message GenesisState {
+  repeated BondingCurvePool pools = 1;
+  string vault = 2;
+}
+
+message BondingCurvePool {
+  uint64 id = 1;
+  string tokenDenom = 2;
+  string creator = 3;
+  string address = 4;
+  string tokenOffset = 5;
+  string nativeOffset = 6;
+  string fee = 7;
+  string nativeDenom = 8;
+}

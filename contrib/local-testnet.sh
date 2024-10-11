@@ -542,7 +542,7 @@ enabled = false
 enabled = true
 
         [[chains]]
-        account_prefix = "cosmos"
+        account_prefix = "meme"
         clock_drift = "5s"
         gas_multiplier = 1.1
         grpc_addr = "tcp://${NODE_IP}:${PGRPC_LADDR_PORT}"  

@@ -281,8 +281,10 @@ func New(
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
-		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
-		sdk.GetConfig().GetBech32AccountAddrPrefix(),
+		// authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
+		authcodec.NewBech32Codec("meme"),
+		// sdk.GetConfig().GetBech32AccountAddrPrefix(),
+		"meme",
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 

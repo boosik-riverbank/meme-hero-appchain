@@ -15,7 +15,7 @@ import (
 
 var (
 	ProviderAccountPrefix = "cosmos"
-	ConsumerAccountPrefix = "consumer"
+	ConsumerAccountPrefix = "meme"
 )
 
 // hermesTemplates maps hermes configuration templates to hermes versions
@@ -368,7 +368,7 @@ func CompatibilityTestConfig(providerVersion, consumerVersion string) TestConfig
 		fmt.Println("Using consumer chain config for v2.0.0")
 		consumerConfig = ChainConfig{
 			ChainId:        ChainID("consu"),
-			AccountPrefix:  "cosmos",
+			AccountPrefix:  "meme",
 			BinaryName:     "interchain-security-cd",
 			IpPrefix:       "7.7.8",
 			VotingWaitTime: 20,
@@ -382,7 +382,7 @@ func CompatibilityTestConfig(providerVersion, consumerVersion string) TestConfig
 		fmt.Println("Using consumer chain config for v3.x.x")
 		consumerConfig = ChainConfig{
 			ChainId:        ChainID("consu"),
-			AccountPrefix:  "cosmos",
+			AccountPrefix:  "meme",
 			BinaryName:     "interchain-security-cd",
 			IpPrefix:       "7.7.8",
 			VotingWaitTime: 20,
