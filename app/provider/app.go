@@ -3,6 +3,9 @@ package app
 import (
 	"context"
 	"fmt"
+	"github.com/cosmos/interchain-security/v6/x/launchpad"
+	launchpadkeeper "github.com/cosmos/interchain-security/v6/x/launchpad/keeper"
+	launchpadtypes "github.com/cosmos/interchain-security/v6/x/launchpad/types"
 	"io"
 	stdlog "log"
 	"os"
@@ -119,7 +122,8 @@ import (
 )
 
 const (
-	AppName     = "interchain-security-p"
+	// AppName     = "interchain-security-p"
+	AppName     = "meme-p"
 	upgradeName = "ics-v1-to-v2"
 )
 
@@ -157,6 +161,7 @@ var (
 		params.AppModuleBasic{},
 		transfer.AppModuleBasic{},
 		ibcprovider.AppModuleBasic{},
+		launchpad.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -169,6 +174,7 @@ var (
 		govtypes.ModuleName:               {authtypes.Burner},
 		ibctransfertypes.ModuleName:       {authtypes.Minter, authtypes.Burner},
 		providertypes.ConsumerRewardsPool: nil,
+		launchpadtypes.ModuleName:         {authtypes.Burner, authtypes.Minter},
 	}
 )
 
@@ -220,6 +226,8 @@ type App struct { // nolint: golint
 	ScopedIBCKeeper         capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper    capabilitykeeper.ScopedKeeper
 	ScopedIBCProviderKeeper capabilitykeeper.ScopedKeeper
+
+	LaunchpadKeeper launchpadkeeper.Keeper
 
 	// the module manager
 	MM *module.Manager
@@ -284,6 +292,7 @@ func New(
 		capabilitytypes.StoreKey,
 		providertypes.StoreKey,
 		consensusparamtypes.StoreKey,
+		launchpadtypes.StoreKey,
 	)
 
 	// register streaming services
@@ -533,6 +542,15 @@ func New(
 	ibcRouter.AddRoute(providertypes.ModuleName, providerModule)
 	app.IBCKeeper.SetRouter(ibcRouter)
 
+	app.LaunchpadKeeper = launchpadkeeper.NewKeeper(
+		runtime.NewKVStoreService(keys[launchpadtypes.StoreKey]),
+		appCodec,
+		app.AccountKeeper,
+		app.BankKeeper,
+		runtime.EventService{},
+		logger,
+	)
+
 	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
 
 	// NOTE: Any module instantiated in the module manager that is later modified
@@ -563,6 +581,7 @@ func New(
 		params.NewAppModule(app.ParamsKeeper),
 		transfer.NewAppModule(app.TransferKeeper),
 		providerModule,
+		launchpad.NewAppModule(app.LaunchpadKeeper, app.GetSubspace(launchpadtypes.ModuleName)),
 	)
 
 	// NOTE: @Msalopek -> ModuleBasic override is happening because Tx commands don't work without it
@@ -620,6 +639,7 @@ func New(
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
 		providertypes.ModuleName,
+		launchpadtypes.ModuleName,
 	)
 
 	// NOTE: provider module needs to come after the staking module, since
@@ -642,6 +662,7 @@ func New(
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
 		providertypes.ModuleName,
+		launchpadtypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -671,6 +692,7 @@ func New(
 		providertypes.ModuleName,
 		consensusparamtypes.ModuleName,
 		crisistypes.ModuleName, // crisis needs to be last so that the genesis state is consistent when it checks invariants
+		launchpadtypes.ModuleName,
 	)
 
 	app.MM.RegisterInvariants(&app.CrisisKeeper)
@@ -1065,6 +1087,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibcexported.ModuleName)
 	paramsKeeper.Subspace(providertypes.ModuleName)
+	paramsKeeper.Subspace(launchpadtypes.ModuleName)
 
 	return paramsKeeper
 }

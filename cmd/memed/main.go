@@ -6,14 +6,16 @@ import (
 
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 
+	app "github.com/cosmos/interchain-security/v6/app/consumer"
 	appparams "github.com/cosmos/interchain-security/v6/app/params"
-	app "github.com/cosmos/interchain-security/v6/app/provider"
-	"github.com/cosmos/interchain-security/v6/cmd/interchain-security-pd/cmd"
+	"github.com/cosmos/interchain-security/v6/cmd/memed/cmd"
 )
 
 func main() {
-	appparams.SetAddressPrefixes(app.AppName)
+	appparams.SetAddressPrefixes(app.Bech32MainPrefix)
+
 	rootCmd := cmd.NewRootCmd()
+
 	if err := svrcmd.Execute(rootCmd, "", app.DefaultNodeHome); err != nil {
 		fmt.Fprintln(rootCmd.OutOrStderr(), err)
 		os.Exit(1)

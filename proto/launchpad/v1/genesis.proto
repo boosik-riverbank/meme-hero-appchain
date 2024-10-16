@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package launchpad.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/memehero/interchain-security/v1/x/launchpad/types";
+
+message GenesisState {
+  repeated BondingCurvePool pools = 1;
+  string vault = 2;
+}
+
+message BondingCurvePool {
+  uint64 id = 1;
+  string tokenName = 2;
+  string tokenSymbol = 3;
+  string tokenDenom = 4;
+  string pairDenom = 5;
+  string creator = 6;
+  string poolAddress = 7;
+  bool isListed = 8;
+  TokenInformation tokenInformation = 9;
+}
+
+message TokenInformation {
+  string description = 1 [(gogoproto.nullable) = true];
+  string image = 2 [(gogoproto.nullable) = true];
+  string website = 3 [(gogoproto.nullable) = true];
+  string telegram = 4 [(gogoproto.nullable) = true];
+  string twitter = 5 [(gogoproto.nullable) = true];
+}

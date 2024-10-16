@@ -5,7 +5,7 @@ set -eo pipefail
 echo "Generating gogo proto code"
 cd proto
 # proto_dirs=$(find ./interchain_security -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
-proto_dirs=$(find ./launch_pad -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
+proto_dirs=$(find ./launchpad -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
 for dir in $proto_dirs; do
   for file in $(find "${dir}" -maxdepth 1 -name '*.proto'); do
     echo "${file}"
@@ -20,6 +20,6 @@ cd ..
 
 # move proto files to the right places
 # cp -r github.com/cosmos/interchain-security/v6/* ./
-cp -r github.com/memehero/interchain-security/v1/x/launch_pad/* .
+cp -r github.com/memehero/interchain-security/v1/x/launchpad/* .
 rm -rf github.com
 

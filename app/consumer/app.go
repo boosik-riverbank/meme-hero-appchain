@@ -3,6 +3,9 @@ package app
 import (
 	"context"
 	"fmt"
+	"github.com/cosmos/interchain-security/v6/x/launchpad"
+	launchpadkeeper "github.com/cosmos/interchain-security/v6/x/launchpad/keeper"
+	launchpadtypes "github.com/cosmos/interchain-security/v6/x/launchpad/types"
 	"io"
 	stdlog "log"
 	"os"
@@ -100,10 +103,12 @@ import (
 )
 
 const (
-	AppName     = "interchain-security-c"
+	// AppName     = "interchain-security-c"
+	AppName     = "memed"
 	upgradeName = "ics-v1-to-v2"
 
-	Bech32MainPrefix = "consumer"
+	// Bech32MainPrefix = "consumer"
+	Bech32MainPrefix = "meme"
 )
 
 func init() {
@@ -140,6 +145,7 @@ var (
 		ibctm.AppModuleBasic{},
 		// router.AppModuleBasic{},
 		ibcconsumer.AppModuleBasic{},
+		launchpad.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -148,6 +154,7 @@ var (
 		ibcconsumertypes.ConsumerRedistributeName:     nil,
 		ibcconsumertypes.ConsumerToSendToProviderName: nil,
 		ibctransfertypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
+		launchpadtypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
 	}
 )
 
@@ -195,6 +202,9 @@ type App struct { // nolint: golint
 	ScopedTransferKeeper    capabilitykeeper.ScopedKeeper
 	ScopedIBCConsumerKeeper capabilitykeeper.ScopedKeeper
 
+	// LAUNCH PAD
+	LaunchPadKeeper launchpadkeeper.Keeper
+
 	// the module manager
 	MM *module.Manager
 
@@ -238,6 +248,7 @@ func New(
 		capabilitytypes.StoreKey, feegrant.StoreKey, authzkeeper.StoreKey,
 		consensusparamtypes.StoreKey,
 		ibcconsumertypes.StoreKey,
+		launchpadtypes.StoreKey,
 	)
 	tkeys := storetypes.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -429,6 +440,15 @@ func New(
 		runtime.ProvideCometInfoService(),
 	)
 
+	app.LaunchPadKeeper = launchpadkeeper.NewKeeper(
+		runtime.NewKVStoreService(keys[launchpadtypes.StoreKey]),
+		appCodec,
+		app.AccountKeeper,
+		app.BankKeeper,
+		runtime.EventService{},
+		logger,
+	)
+
 	app.EvidenceKeeper = *evidenceKeeper
 
 	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
@@ -457,6 +477,7 @@ func New(
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
 		consumerModule,
+		launchpad.NewAppModule(app.LaunchPadKeeper, app.GetSubspace(launchpadtypes.ModuleName)),
 	)
 
 	ModuleBasics = module.NewBasicManagerFromManager(
@@ -490,6 +511,7 @@ func New(
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
 		ibcconsumertypes.ModuleName,
+		launchpadtypes.ModuleName,
 	)
 
 	app.MM.SetOrderEndBlockers(
@@ -508,6 +530,7 @@ func New(
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
 		ibcconsumertypes.ModuleName,
+		launchpadtypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -532,6 +555,7 @@ func New(
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
 		ibcconsumertypes.ModuleName,
+		launchpadtypes.ModuleName,
 	)
 
 	app.MM.RegisterInvariants(&app.CrisisKeeper)
@@ -853,6 +877,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	paramsKeeper.Subspace(ibcconsumertypes.ModuleName)
+	paramsKeeper.Subspace(launchpadtypes.ModuleName)
 
 	return paramsKeeper
 }

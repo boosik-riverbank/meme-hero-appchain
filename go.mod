@@ -28,7 +28,6 @@ require (
 	golang.org/x/sys v0.24.0 // indirect
 	google.golang.org/genproto v0.0.0-20240701130421-f6361c86f094 // indirect
 	google.golang.org/grpc v1.66.2
-	google.golang.org/protobuf v1.34.2
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -134,7 +133,7 @@ require (
 	github.com/zondax/ledger-go v0.14.3 // indirect
 	go.etcd.io/bbolt v1.4.0-alpha.0.0.20240404170359-43604f3112c5 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	golang.org/x/oauth2 v0.21.0 // indirect
+	golang.org/x/oauth2 v0.22.0 // indirect
 	golang.org/x/term v0.23.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
 	google.golang.org/api v0.186.0 // indirect
@@ -161,13 +160,15 @@ require (
 	github.com/informalsystems/itf-go v0.0.1
 	github.com/spf13/viper v1.19.0
 	golang.org/x/mod v0.21.0
-	google.golang.org/genproto/googleapis/api v0.0.0-20240624140628-dc46fd24d27d
+	google.golang.org/genproto/googleapis/api v0.0.0-20240814211410-ddb44dafa142
+	google.golang.org/protobuf v1.35.1
 )
+
+require github.com/grpc-ecosystem/grpc-gateway/v2 v2.22.0
 
 require (
 	cloud.google.com/go/auth v0.6.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.2 // indirect
-	cosmossdk.io/schema v0.3.0 // indirect
 	cosmossdk.io/x/circuit v0.1.1 // indirect
 	github.com/DataDog/datadog-go v3.2.0+incompatible // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
@@ -214,7 +215,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240709173604-40e1e62336c5 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240814211410-ddb44dafa142 // indirect
 	gotest.tools/v3 v3.5.1 // indirect
 )
 

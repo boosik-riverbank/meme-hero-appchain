@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package launchpad.v1;
+
+import "launchpad/v1/genesis.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/api/annotations.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "cosmos/msg/v1/msg.proto";
+
+option go_package = "github.com/memehero/interchain-security/v1/x/launchpad/types";
+
+service Query {
+  option (cosmos.msg.v1.service) = true;
+
+  rpc Pools(QueryPools) returns (QueryPoolsResponse) {
+    option (google.api.http).get = "/memehero/launchpad/v1/pools";
+  }
+  rpc Pool(QueryPool) returns (QueryPoolResponse) {
+    option (google.api.http).get = "/memehero/launchpad/v1/pool/{id}";
+  }
+  rpc PoolAmount(QueryPoolAmount) returns (QueryPoolAmountResponse) {
+    option (google.api.http).get = "/memehero/launchpad/v1/pool_amount/{id}";
+  }
+}
+
+message QueryPools {
+
+}
+
+message QueryPoolsResponse {
+  uint64 count = 1;
+  repeated BondingCurvePool pools = 2 [(gogoproto.nullable) = false];
+}
+
+message QueryPool {
+  uint64 id = 1;
+}
+
+message QueryPoolResponse {
+  BondingCurvePool pool = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryPoolAmount {
+  uint64 id = 1;
+}
+
+message QueryPoolAmountResponse {
+  cosmos.base.v1beta1.Coin token = 1 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin pair = 2 [(gogoproto.nullable) = false];
+}

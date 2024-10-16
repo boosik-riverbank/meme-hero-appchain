@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package launchpad.v1;
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/memehero/interchain-security/v1/x/launchpad/types";
+
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+
+  rpc CreatePool(MsgCreatePool) returns (MsgCreatePoolResponse);
+  rpc BuyToken(MsgBuyToken) returns (MsgBuyTokenResponse);
+  rpc SellToken(MsgSellToken) returns (MsgSellTokenResponse);
+}
+
+message MsgCreatePool {
+  option (cosmos.msg.v1.signer) = "from_address";
+
+  string from_address = 1;
+  string tokenName = 2;
+  string tokenSymbol = 3;
+  string tokenDenom = 4;
+  string pairDenom = 5;
+  cosmos.base.v1beta1.Coin initialQuantity = 6;
+
+  string description = 7 [(gogoproto.nullable) = true];
+  string image = 8 [(gogoproto.nullable) = true];
+  string website = 9 [(gogoproto.nullable) = true];
+  string telegram = 10 [(gogoproto.nullable) = true];
+  string twitter = 11 [(gogoproto.nullable) = true];
+}
+
+message MsgCreatePoolResponse {
+  string Id = 1;
+  string poolAddress = 2;
+  cosmos.base.v1beta1.Coin initialTokenAmount = 3;
+  cosmos.base.v1beta1.Coin initialPairAmount = 4;
+}
+
+message MsgBuyToken {
+  option (cosmos.msg.v1.signer) = "from_address";
+
+  string from_address = 1;
+  uint64 id = 2;
+  cosmos.base.v1beta1.Coin amount = 3;
+}
+
+message MsgBuyTokenResponse {
+  cosmos.base.v1beta1.Coin amountIn = 1;
+  cosmos.base.v1beta1.Coin amountOut = 2;
+}
+
+message MsgSellToken {
+  option (cosmos.msg.v1.signer) = "from_address";
+
+  string from_address = 1;
+  uint64 id = 2;
+  cosmos.base.v1beta1.Coin amount = 3;
+}
+
+message MsgSellTokenResponse {
+  cosmos.base.v1beta1.Coin amountIn = 1;
+  cosmos.base.v1beta1.Coin amountOut = 2;
+}
