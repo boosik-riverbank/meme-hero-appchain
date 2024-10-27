@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package icacontrol.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/memehero/interchain-security/v1/x/icacontrol/types";
+
+message GenesisState {
+  repeated Butler butlers = 1;
+  repeated Queue queues = 2;
+  uint64 nextQueueId = 3;
+  string controller = 4;
+}
+
+message Butler {
+  uint64 targetChainId = 1;
+  string chainTag = 2;
+  IcaConnectionInfo icaConnectionInfo = 3;
+  string hostAddress = 4;
+}
+
+message IcaConnectionInfo {
+  string connectionId = 1;
+  string channel_id = 2;
+  string port_id = 3;
+}
+
+message Queue {
+  cosmos.base.v1beta1.Coin token = 1;
+  cosmos.base.v1beta1.Coin pair = 2;
+  bool finished = 3;
+  uint64 targetChainId = 4;
+}

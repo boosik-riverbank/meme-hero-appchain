@@ -3,6 +3,10 @@ package app
 import (
 	"context"
 	"fmt"
+	icakeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/keeper"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
+	icacontrolkeeper "github.com/cosmos/interchain-security/v6/x/intertx/keeper"
+	icacontroltypes "github.com/cosmos/interchain-security/v6/x/intertx/types"
 	"github.com/cosmos/interchain-security/v6/x/launchpad"
 	launchpadkeeper "github.com/cosmos/interchain-security/v6/x/launchpad/keeper"
 	launchpadtypes "github.com/cosmos/interchain-security/v6/x/launchpad/types"
@@ -203,7 +207,8 @@ type App struct { // nolint: golint
 	ScopedIBCConsumerKeeper capabilitykeeper.ScopedKeeper
 
 	// LAUNCH PAD
-	LaunchPadKeeper launchpadkeeper.Keeper
+	IcaControlKeeper icacontrolkeeper.Keeper
+	LaunchpadKeeper  launchpadkeeper.Keeper
 
 	// the module manager
 	MM *module.Manager
@@ -249,6 +254,7 @@ func New(
 		consensusparamtypes.StoreKey,
 		ibcconsumertypes.StoreKey,
 		launchpadtypes.StoreKey,
+		capabilitytypes.StoreKey,
 	)
 	tkeys := storetypes.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -440,11 +446,36 @@ func New(
 		runtime.ProvideCometInfoService(),
 	)
 
-	app.LaunchPadKeeper = launchpadkeeper.NewKeeper(
+	icaControllerKeeper := icakeeper.NewKeeper(
+		appCodec,
+		keys[icatypes.StoreKey],
+		app.GetSubspace(icatypes.SubModuleName),
+		app.IBCKeeper.ChannelKeeper,
+		app.IBCKeeper.ChannelKeeper,
+		app.IBCKeeper.PortKeeper,
+		app.ScopedIBCKeeper,
+		app.MsgServiceRouter(),
+		"memehero",
+	)
+	app.IcaControlKeeper = icacontrolkeeper.NewKeeper(
+		runtime.NewKVStoreService(keys[icacontroltypes.StoreKey]),
+		appCodec,
+		keys[icacontroltypes.StoreKey],
+		app.AccountKeeper,
+		icaControllerKeeper,
+		app.ScopedIBCKeeper,
+		app.GetSubspace(icacontroltypes.ModuleName),
+		app.IBCKeeper.ChannelKeeper,
+		app.TransferKeeper,
+		runtime.EventService{},
+		logger,
+	)
+	app.LaunchpadKeeper = launchpadkeeper.NewKeeper(
 		runtime.NewKVStoreService(keys[launchpadtypes.StoreKey]),
 		appCodec,
 		app.AccountKeeper,
 		app.BankKeeper,
+		app.IcaControlKeeper,
 		runtime.EventService{},
 		logger,
 	)
@@ -477,7 +508,7 @@ func New(
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
 		consumerModule,
-		launchpad.NewAppModule(app.LaunchPadKeeper, app.GetSubspace(launchpadtypes.ModuleName)),
+		launchpad.NewAppModule(app.LaunchpadKeeper, app.GetSubspace(launchpadtypes.ModuleName)),
 	)
 
 	ModuleBasics = module.NewBasicManagerFromManager(

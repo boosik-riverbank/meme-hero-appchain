@@ -1,12 +1,17 @@
 package provider
 
 import (
+	"fmt"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v8/modules/core/exported"
+	intertxtypes "github.com/cosmos/interchain-security/v6/x/intertx/types"
+	osmosistypes "github.com/osmosis-labs/osmosis/v26/x/gamm/pool-models/balancer"
+	"strconv"
+	"strings"
 
 	"cosmossdk.io/math"
 
@@ -277,6 +282,73 @@ func (im IBCMiddleware) OnAcknowledgementPacket(
 	relayer sdk.AccAddress,
 ) error {
 	// call underlying app's OnAcknowledgementPacket callback.
+	im.keeper.Logger(ctx).Info("[OnAcknowledgementPacket]", packet.String(), string(acknowledgement))
+
+	var ack channeltypes.Acknowledgement
+	if err := channeltypes.SubModuleCdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
+		return fmt.Errorf("cannot unmarshal ICS-27 packet acknowledgement: %v", err)
+	}
+
+	var transferPacketData ibctransfertypes.FungibleTokenPacketData
+	err := channeltypes.SubModuleCdc.UnmarshalJSON(packet.Data, &transferPacketData)
+	if err == nil {
+		splited := strings.Split(transferPacketData.Memo, ":")
+		id, err := strconv.ParseUint(splited[0], 10, 64)
+		if err != nil {
+			return err
+		}
+		memo := splited[1]
+		targetChainId, err := strconv.ParseUint(splited[2], 10, 64)
+		if err != nil {
+			return err
+		}
+		if memo == intertxtypes.MEMO_TRANSFER_TOKEN {
+			senderAcc, err := sdk.AccAddressFromBech32(transferPacketData.Sender)
+			if err != nil {
+				return err
+			}
+
+			queue, err := im.keeper.InterTxKeeper.GetQueue(ctx, id)
+			if err != nil {
+				return err
+			}
+			im.keeper.Logger(ctx).Info("Token is transferred", senderAcc.String(), queue.String())
+
+			goCtx := sdk.WrapSDKContext(ctx)
+			im.keeper.Logger(ctx).Info(fmt.Sprintf("Send pair token, %v,%v, %v, %v", id, senderAcc.String(), transferPacketData.Receiver, queue.Pair.String()))
+			err = im.keeper.InterTxKeeper.TransferAssets(
+				goCtx,
+				id,
+				senderAcc,
+				transferPacketData.Receiver,
+				*queue.Pair,
+				fmt.Sprintf("%v:%s:%v", id, intertxtypes.MEMO_TRANSFER_PAIR, targetChainId))
+			if err != nil {
+				return err
+			}
+		} else if memo == intertxtypes.MEMO_TRANSFER_PAIR {
+			im.keeper.Logger(ctx).Info("Pair is transferred, creating new pool")
+			queue, err := im.keeper.InterTxKeeper.GetQueue(ctx, id)
+			if err != nil {
+				return err
+			}
+
+			err = im.keeper.InterTxKeeper.SendCreateNewPoolTx(ctx, targetChainId, *queue.Token, *queue.Pair)
+			if err != nil {
+				return err
+			}
+		}
+
+		im.keeper.Logger(ctx).Info("Unknown packet type, ignore")
+		return nil
+	}
+
+	var balancerPoolCreatePacketData osmosistypes.MsgCreateBalancerPool
+	err = channeltypes.SubModuleCdc.UnmarshalJSON(packet.Data, &balancerPoolCreatePacketData)
+	if err == nil {
+		return nil
+	}
+
 	return im.app.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
 }
 

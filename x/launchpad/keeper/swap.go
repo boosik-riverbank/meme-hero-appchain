@@ -56,6 +56,14 @@ func (k Keeper) BuyToken(ctx context.Context, poolID uint64, user sdk.AccAddress
 		if err != nil {
 			return nil, nil, err
 		}
+
+		tokenBalance := k.bankKeeper.GetBalance(ctx, poolAddress, tokenReserve.Denom)
+		pairBalance := k.bankKeeper.GetBalance(ctx, poolAddress, pairReserve.Denom)
+
+		err = k.AddLiquidity(ctx, poolAddress, pool.TargetChain, tokenBalance, pairBalance)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	return &sdk.Coin{Denom: wantToBuy.Denom, Amount: wantToBuy.Amount}, &sdk.Coin{Denom: pool.TokenDenom, Amount: math.NewIntFromBigInt(res)}, nil

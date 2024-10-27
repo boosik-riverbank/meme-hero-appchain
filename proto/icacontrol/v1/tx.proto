@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package icacontrol.v1;
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
+import "gogoproto/gogo.proto";
+import "icacontrol/v1/genesis.proto";
+import "google/protobuf/any.proto";
+
+option go_package = "github.com/memehero/interchain-security/v1/x/icacontrol/types";
+
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+
+  rpc CreateButler(MsgCreateButler) returns (MsgCreateButlerResponse);
+  rpc SubmitTx(MsgSubmitTx) returns (MsgSubmitTxResponse);
+  rpc Transfer(MsgTransfer) returns (MsgTransferResponse);
+}
+
+message MsgCreateButler {
+  option (cosmos.msg.v1.signer) = "from_address";
+
+  uint64 targetChainId = 1;
+  string chainTag = 2;
+  string connectionId = 3;
+  string from_address = 4;
+}
+
+message MsgCreateButlerResponse {
+  uint64 targetId = 1;
+  string chainTag = 2;
+}
+
+message MsgSubmitTx {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string  owner         = 1;
+  string  connection_id = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  google.protobuf.Any msg = 3;
+}
+
+message MsgSubmitTxResponse {}
+
+// TODO : delete
+message MsgTransfer {
+  option (cosmos.msg.v1.signer) = "sender";
+
+  uint64 id = 1;
+  uint64 targetChainId = 2;
+  string sender = 3;
+  string memo = 4;
+  cosmos.base.v1beta1.Coin token = 5;
+  cosmos.base.v1beta1.Coin pair = 6;
+}
+
+message MsgTransferResponse {
+
+}

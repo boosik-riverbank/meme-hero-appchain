@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	intertxkeeper "github.com/cosmos/interchain-security/v6/x/intertx/keeper"
 	"github.com/cosmos/interchain-security/v6/x/launchpad/types"
 )
 
@@ -27,6 +28,7 @@ type Keeper struct {
 	// Keepers
 	authKeeper types.AuthKeeper
 	bankKeeper types.BankKeeper
+	icaKeeper  intertxkeeper.Keeper
 
 	logger       log.Logger
 	eventService runtime.EventService
@@ -37,6 +39,7 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	authKeeper types.AuthKeeper,
 	bankKeeper types.BankKeeper,
+	icaKeeper intertxkeeper.Keeper,
 	eventService runtime.EventService,
 	logger log.Logger) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
@@ -44,6 +47,7 @@ func NewKeeper(
 		// feeCollector: feeCollector,
 		authKeeper:   authKeeper,
 		bankKeeper:   bankKeeper,
+		icaKeeper:    icaKeeper,
 		count:        collections.NewItem(sb, types.KeyPrefixPoolCount, "count", collections.Uint64Value),
 		pools:        collections.NewMap(sb, types.KeyPrefixPools, "pools", collections.Uint64Key, codec.CollValue[types.BondingCurvePool](cdc)),
 		logger:       logger,

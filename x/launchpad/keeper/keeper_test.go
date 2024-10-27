@@ -34,7 +34,8 @@ type KeeperTestSuite struct {
 
 	keeper     keeper.Keeper
 	bankKeeper types.BankKeeper
-	authKeeper *types.MockAuthKeeper
+	authKeeper types.MockAuthKeeper
+	icaKeeper  types.InterTxKeeper
 
 	queryClient types.QueryClient
 	msgServer   types.MsgServer
@@ -71,8 +72,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 	ctrl := gomock.NewController(suite.T())
 	bankKeeper := test_utils.NewMockBankKeeper()
 	authKeeper := types.NewMockAuthKeeper(ctrl)
-	suite.authKeeper = authKeeper
+	icaKeeper := test_utils.NewMockIcaControlKeeper()
+	suite.authKeeper = *authKeeper
 	suite.bankKeeper = bankKeeper
+	suite.icaKeeper = icaKeeper
 
 	storeService := runtime.NewKVStoreService(key)
 	// feeCollector, _ := sdk.AccAddressFromBech32("meme1cmpcwzqxp2354p6galq0cj37tk8rr7q3l8393n")
@@ -82,6 +85,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		suite.cdc,
 		authKeeper,
 		bankKeeper,
+		icaKeeper,
 		runtime.EventService{},
 		log.NewNopLogger())
 

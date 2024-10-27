@@ -20,6 +20,7 @@ func (suite *KeeperTestSuite) TestCreateNewPool() {
 		FromAddress:     creatorAddr.String(),
 		PairDenom:       "uatom",
 		InitialQuantity: &sdk.Coin{Denom: "uatom", Amount: math.NewInt(2_000000)},
+		TargetChain:     0,
 	})
 	require.NoError(err)
 	require.Equal(pool.Id, uint64(0))

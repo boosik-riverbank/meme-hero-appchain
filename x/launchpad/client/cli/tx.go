@@ -31,7 +31,7 @@ func GetTxCmd() *cobra.Command {
 
 func GetCreatePoolCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-pool <from_address> <token_name> <token_symbol> <token_denom> <pair_denom> <initial_quantity> <description | null> <image_url | null> <website | null> <telegram | null> <twitter | null>",
+		Use:   "create-pool <from_address> <token_name> <token_symbol> <token_denom> <pair_denom> <initial_quantity> <target_chain> <description | null> <image_url | null> <website | null> <telegram | null> <twitter | null>",
 		Short: "Create new pool",
 		Long: strings.TrimSpace(
 			fmt.Sprintf("Create new pool.\nExample: memed tx create-pool meme1234..abcd udoge uatom 100000000udoge"),
@@ -58,17 +58,21 @@ func GetCreatePoolCmd() *cobra.Command {
 			tokenSymbol := args[2]
 			tokenDenom := args[3]
 			pairDenom := args[4]
-
-			image := args[6]
-			description := args[7]
-			website := args[8]
-			telegram := args[9]
-			twitter := args[10]
+			targetChain, err := strconv.ParseUint(args[6], 10, 64)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewCreatePoolMsg(clientCtx.FromAddress, tokenName, tokenSymbol, tokenDenom, pairDenom, description, image, website, telegram, twitter, &coins[0])
+			image := args[7]
+			description := args[8]
+			website := args[9]
+			telegram := args[10]
+			twitter := args[11]
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewCreatePoolMsg(clientCtx.FromAddress, tokenName, tokenSymbol, tokenDenom, pairDenom, targetChain, description, image, website, telegram, twitter, &coins[0])
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

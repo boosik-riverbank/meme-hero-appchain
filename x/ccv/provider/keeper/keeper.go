@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	intertxkeeper "github.com/cosmos/interchain-security/v6/x/intertx/keeper"
 	"reflect"
 	"time"
 
@@ -50,6 +51,7 @@ type Keeper struct {
 	distributionKeeper ccv.DistributionKeeper
 	bankKeeper         ccv.BankKeeper
 	govKeeper          govkeeper.Keeper
+	InterTxKeeper      intertxkeeper.Keeper
 	feeCollectorName   string
 
 	validatorAddressCodec addresscodec.Codec
@@ -65,6 +67,7 @@ func NewKeeper(
 	accountKeeper ccv.AccountKeeper,
 	distributionKeeper ccv.DistributionKeeper, bankKeeper ccv.BankKeeper,
 	govKeeper govkeeper.Keeper,
+	interTxKeeper intertxkeeper.Keeper,
 	authority string,
 	validatorAddressCodec, consensusAddressCodec addresscodec.Codec,
 	feeCollectorName string,
@@ -83,6 +86,7 @@ func NewKeeper(
 		accountKeeper:         accountKeeper,
 		distributionKeeper:    distributionKeeper,
 		bankKeeper:            bankKeeper,
+		InterTxKeeper:         interTxKeeper,
 		feeCollectorName:      feeCollectorName,
 		validatorAddressCodec: validatorAddressCodec,
 		consensusAddressCodec: consensusAddressCodec,
@@ -112,8 +116,8 @@ func (k Keeper) ConsensusAddressCodec() addresscodec.Codec {
 // non-nil values for all its fields. Otherwise this method will panic.
 func (k Keeper) mustValidateFields() {
 	// Ensures no fields are missed in this validation
-	if reflect.ValueOf(k).NumField() != 17 {
-		panic(fmt.Sprintf("number of fields in provider keeper is not 18 - have %d", reflect.ValueOf(k).NumField()))
+	if reflect.ValueOf(k).NumField() != 18 {
+		panic(fmt.Sprintf("number of fields in provider keeper is not 19 - have %d", reflect.ValueOf(k).NumField()))
 	}
 
 	if k.validatorAddressCodec == nil || k.consensusAddressCodec == nil {

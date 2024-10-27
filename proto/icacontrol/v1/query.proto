@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package icacontrol.v1;
+
+import "icacontrol/v1/genesis.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/api/annotations.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "cosmos/msg/v1/msg.proto";
+
+option go_package = "github.com/memehero/interchain-security/v1/x/icacontrol/types";
+
+service Query {
+  option (cosmos.msg.v1.service) = true;
+
+  rpc Butlers(QueryButlers) returns (QueryButlersResponse) {
+    option (google.api.http).get = "/memehero/icacontrol/v1/butlers";
+  }
+  rpc Butler(QueryButler) returns (QueryButlerResponse) {
+    option (google.api.http).get = "/memehero/icacontrol/v1/butler/{id}";
+  }
+}
+
+message QueryButlers {
+
+}
+
+message QueryButlersResponse {
+  string count = 1;
+  repeated Butler butlers = 2 [(gogoproto.nullable) = false];
+}
+
+message QueryButler {
+  uint64 id = 1;
+}
+
+message QueryButlerResponse {
+  Butler butler = 1 [(gogoproto.nullable) = false];
+}

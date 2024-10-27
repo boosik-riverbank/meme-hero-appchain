@@ -24,13 +24,14 @@ message MsgCreatePool {
   string tokenSymbol = 3;
   string tokenDenom = 4;
   string pairDenom = 5;
-  cosmos.base.v1beta1.Coin initialQuantity = 6;
+  uint64 targetChain = 6;
+  cosmos.base.v1beta1.Coin initialQuantity = 7;
 
-  string description = 7 [(gogoproto.nullable) = true];
-  string image = 8 [(gogoproto.nullable) = true];
-  string website = 9 [(gogoproto.nullable) = true];
-  string telegram = 10 [(gogoproto.nullable) = true];
-  string twitter = 11 [(gogoproto.nullable) = true];
+  string description = 8 [(gogoproto.nullable) = true];
+  string image = 9 [(gogoproto.nullable) = true];
+  string website = 10 [(gogoproto.nullable) = true];
+  string telegram = 11 [(gogoproto.nullable) = true];
+  string twitter = 12 [(gogoproto.nullable) = true];
 }
 
 message MsgCreatePoolResponse {
@@ -38,6 +39,7 @@ message MsgCreatePoolResponse {
   string poolAddress = 2;
   cosmos.base.v1beta1.Coin initialTokenAmount = 3;
   cosmos.base.v1beta1.Coin initialPairAmount = 4;
+  uint64 targetCain = 5;
 }
 
 message MsgBuyToken {

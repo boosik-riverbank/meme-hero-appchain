@@ -6,6 +6,7 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	icacontroltypes "github.com/cosmos/interchain-security/v6/x/intertx/types"
 	"github.com/cosmos/interchain-security/v6/x/launchpad/types"
 )
 
@@ -68,4 +69,20 @@ func (m MockBankKeeper) MintCoins(ctx context.Context, moduleName string, amt sd
 func (m MockBankKeeper) SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error {
 	acc := authtypes.NewEmptyModuleAccount(senderModule, authtypes.Minter)
 	return m.SendCoins(ctx, acc.GetAddress(), recipientAddr, amt)
+}
+
+type MockIcaKeeper struct {
+}
+
+func (m MockIcaKeeper) GetButler(ctx context.Context, id string) (*icacontroltypes.Butler, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m MockIcaKeeper) SendTx(ctx sdk.Context, controllerId, connectionId string, msgs []sdk.Msg, timeout uint64) error {
+	return nil
+}
+
+func NewMockIcaControlKeeper() types.InterTxKeeper {
+	return &MockIcaKeeper{}
 }

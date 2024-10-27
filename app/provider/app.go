@@ -3,6 +3,21 @@ package app
 import (
 	"context"
 	"fmt"
+	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
+	icacontroller "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/keeper"
+	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
+	icahost "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host"
+	icahostkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/keeper"
+	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
+	ibcfee "github.com/cosmos/ibc-go/v8/modules/apps/29-fee"
+	ibcfeekeeper "github.com/cosmos/ibc-go/v8/modules/apps/29-fee/keeper"
+	ibcfeetypes "github.com/cosmos/ibc-go/v8/modules/apps/29-fee/types"
+	"github.com/cosmos/interchain-security/v6/x/intertx"
+	intertxkeeper "github.com/cosmos/interchain-security/v6/x/intertx/keeper"
+	intertxtypes "github.com/cosmos/interchain-security/v6/x/intertx/types"
+
 	"github.com/cosmos/interchain-security/v6/x/launchpad"
 	launchpadkeeper "github.com/cosmos/interchain-security/v6/x/launchpad/keeper"
 	launchpadtypes "github.com/cosmos/interchain-security/v6/x/launchpad/types"
@@ -16,7 +31,7 @@ import (
 	"github.com/cosmos/ibc-go/modules/capability"
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
+	ibctransfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
@@ -159,9 +174,11 @@ var (
 		ibc.AppModuleBasic{},
 		ibctm.AppModuleBasic{},
 		params.AppModuleBasic{},
-		transfer.AppModuleBasic{},
 		ibcprovider.AppModuleBasic{},
 		launchpad.AppModuleBasic{},
+		intertx.AppModuleBasic{},
+		ica.AppModuleBasic{},
+		ibctransfer.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -175,6 +192,8 @@ var (
 		ibctransfertypes.ModuleName:       {authtypes.Minter, authtypes.Burner},
 		providertypes.ConsumerRewardsPool: nil,
 		launchpadtypes.ModuleName:         {authtypes.Burner, authtypes.Minter},
+		intertxtypes.ModuleName:           {authtypes.Burner, authtypes.Minter},
+		icatypes.ModuleName:               nil,
 	}
 )
 
@@ -227,7 +246,16 @@ type App struct { // nolint: golint
 	ScopedTransferKeeper    capabilitykeeper.ScopedKeeper
 	ScopedIBCProviderKeeper capabilitykeeper.ScopedKeeper
 
-	LaunchpadKeeper launchpadkeeper.Keeper
+	ScopedICAControllerKeeper capabilitykeeper.ScopedKeeper
+	ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
+	ScopedInterTxKeeper       capabilitykeeper.ScopedKeeper
+
+	// LAUNCH PAD
+	IbcFeeKeeper        ibcfeekeeper.Keeper
+	IcaHostKeeper       icahostkeeper.Keeper
+	IcaControllerKeeper icacontrollerkeeper.Keeper
+	InterTxKeeper       intertxkeeper.Keeper
+	LaunchpadKeeper     launchpadkeeper.Keeper
 
 	// the module manager
 	MM *module.Manager
@@ -285,14 +313,28 @@ func New(
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 
 	keys := storetypes.NewKVStoreKeys(
-		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey, crisistypes.StoreKey,
-		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
-		govtypes.StoreKey, paramstypes.StoreKey, ibcexported.StoreKey, upgradetypes.StoreKey,
-		evidencetypes.StoreKey, ibctransfertypes.StoreKey,
+		authtypes.StoreKey,
+		banktypes.StoreKey,
+		stakingtypes.StoreKey,
+		crisistypes.StoreKey,
+		minttypes.StoreKey,
+		distrtypes.StoreKey,
+		slashingtypes.StoreKey,
+		govtypes.StoreKey,
+		paramstypes.StoreKey,
+		ibcexported.StoreKey,
+		upgradetypes.StoreKey,
+		evidencetypes.StoreKey,
+		ibctransfertypes.StoreKey,
 		capabilitytypes.StoreKey,
 		providertypes.StoreKey,
 		consensusparamtypes.StoreKey,
 		launchpadtypes.StoreKey,
+		intertxtypes.StoreKey,
+		icacontrollertypes.StoreKey,
+		icahosttypes.StoreKey,
+		ibcfeetypes.StoreKey,
+		porttypes.StoreKey,
 	)
 
 	// register streaming services
@@ -341,6 +383,15 @@ func New(
 	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName)
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedIBCProviderKeeper := app.CapabilityKeeper.ScopeToModule(providertypes.ModuleName)
+	// grant capabilities for the ibc and ibc-transfer modules
+	scopedICAControllerKeeper := app.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
+	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
+	scopedInterTxKeeper := app.CapabilityKeeper.ScopeToModule(intertxtypes.ModuleName)
+
+	app.ScopedICAControllerKeeper = scopedICAControllerKeeper
+	app.ScopedICAHostKeeper = scopedICAHostKeeper
+	app.ScopedInterTxKeeper = scopedInterTxKeeper
+
 	app.CapabilityKeeper.Seal()
 
 	// add keepers
@@ -438,16 +489,6 @@ func New(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	// create evidence keeper with router
-	app.EvidenceKeeper = *evidencekeeper.NewKeeper(
-		appCodec,
-		runtime.NewKVStoreService(keys[evidencetypes.StoreKey]),
-		app.StakingKeeper,
-		app.SlashingKeeper,
-		app.AccountKeeper.AddressCodec(),
-		runtime.ProvideCometInfoService(),
-	)
-
 	app.ProviderKeeper = ibcproviderkeeper.NewKeeper(
 		appCodec,
 		keys[providertypes.StoreKey],
@@ -463,10 +504,21 @@ func New(
 		app.DistrKeeper,
 		app.BankKeeper,
 		govkeeper.Keeper{}, // will be set after the GovKeeper is created
+		app.InterTxKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
 		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
 		authtypes.FeeCollectorName,
+	)
+
+	// create evidence keeper with router
+	app.EvidenceKeeper = *evidencekeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[evidencetypes.StoreKey]),
+		app.StakingKeeper,
+		app.SlashingKeeper,
+		app.AccountKeeper.AddressCodec(),
+		runtime.ProvideCometInfoService(),
 	)
 
 	govConfig := govtypes.DefaultConfig()
@@ -531,15 +583,74 @@ func New(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
+	app.IcaControllerKeeper = icacontrollerkeeper.NewKeeper(
+		appCodec,
+		keys[icacontrollertypes.StoreKey],
+		app.GetSubspace(icacontrollertypes.SubModuleName),
+		app.IBCKeeper.ChannelKeeper,
+		app.IBCKeeper.ChannelKeeper,
+		app.IBCKeeper.PortKeeper,
+		scopedICAControllerKeeper,
+		app.MsgServiceRouter(),
+		"memehero",
+	)
+	app.InterTxKeeper = intertxkeeper.NewKeeper(
+		runtime.NewKVStoreService(keys[intertxtypes.StoreKey]),
+		appCodec,
+		keys[intertxtypes.StoreKey],
+		app.AccountKeeper,
+		app.IcaControllerKeeper,
+		app.ScopedInterTxKeeper,
+		app.GetSubspace(intertxtypes.ModuleName),
+		app.IBCKeeper.ChannelKeeper,
+		app.TransferKeeper,
+		runtime.EventService{},
+		logger,
+	)
+	app.ProviderKeeper.InterTxKeeper = app.InterTxKeeper
+
+	app.IbcFeeKeeper = ibcfeekeeper.NewKeeper(
+		appCodec, keys[ibcfeetypes.StoreKey],
+		app.IBCKeeper.ChannelKeeper, // may be replaced with IBC middleware
+		app.IBCKeeper.ChannelKeeper,
+		app.IBCKeeper.PortKeeper,
+		app.AccountKeeper,
+		app.BankKeeper,
+	)
+	app.IcaHostKeeper = icahostkeeper.NewKeeper(
+		appCodec, keys[icahosttypes.StoreKey],
+		app.GetSubspace(icahosttypes.SubModuleName),
+		app.IbcFeeKeeper,
+		app.IBCKeeper.ChannelKeeper,
+		app.IBCKeeper.PortKeeper,
+		app.AccountKeeper,
+		scopedICAHostKeeper,
+		app.MsgServiceRouter(),
+		"memehero",
+	)
+	app.IcaHostKeeper.WithQueryRouter(app.GRPCQueryRouter())
+
+	interTxIbcModule := intertx.NewIBCModule(app.InterTxKeeper)
+	icaModule := ica.NewAppModule(&app.IcaControllerKeeper, &app.IcaHostKeeper)
+
+	icaControllerIBCModule := icacontroller.NewIBCMiddleware(interTxIbcModule, app.IcaControllerKeeper)
+	icaControllerStack := ibcfee.NewIBCMiddleware(icaControllerIBCModule, app.IbcFeeKeeper)
+
+	icaHostIBCModule := icahost.NewIBCModule(app.IcaHostKeeper)
+	icaHostStack := ibcfee.NewIBCMiddleware(icaHostIBCModule, app.IbcFeeKeeper)
+
 	// Add an IBC middleware callback to track the consumer rewards
 	var transferStack porttypes.IBCModule
-	transferStack = transfer.NewIBCModule(app.TransferKeeper)
+	transferStack = ibctransfer.NewIBCModule(app.TransferKeeper)
 	transferStack = ibcprovider.NewIBCMiddleware(transferStack, app.ProviderKeeper)
 
 	// create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferStack)
 	ibcRouter.AddRoute(providertypes.ModuleName, providerModule)
+	ibcRouter.AddRoute(intertxtypes.ModuleName, interTxIbcModule)
+	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostStack)
+	ibcRouter.AddRoute(icacontrollertypes.SubModuleName, icaControllerStack)
 	app.IBCKeeper.SetRouter(ibcRouter)
 
 	app.LaunchpadKeeper = launchpadkeeper.NewKeeper(
@@ -547,6 +658,7 @@ func New(
 		appCodec,
 		app.AccountKeeper,
 		app.BankKeeper,
+		app.InterTxKeeper,
 		runtime.EventService{},
 		logger,
 	)
@@ -579,9 +691,12 @@ func New(
 		ibc.NewAppModule(app.IBCKeeper),
 		ibctm.NewAppModule(),
 		params.NewAppModule(app.ParamsKeeper),
-		transfer.NewAppModule(app.TransferKeeper),
+		ibctransfer.NewAppModule(app.TransferKeeper),
 		providerModule,
+		icaModule,
 		launchpad.NewAppModule(app.LaunchpadKeeper, app.GetSubspace(launchpadtypes.ModuleName)),
+		intertx.NewAppModule(app.appCodec, app.InterTxKeeper, app.AccountKeeper),
+		ibcfee.NewAppModule(app.IbcFeeKeeper),
 	)
 
 	// NOTE: @Msalopek -> ModuleBasic override is happening because Tx commands don't work without it
@@ -640,6 +755,10 @@ func New(
 		vestingtypes.ModuleName,
 		providertypes.ModuleName,
 		launchpadtypes.ModuleName,
+		ibctransfertypes.ModuleName,
+		intertxtypes.ModuleName,
+		icatypes.ModuleName,
+		ibcfeetypes.ModuleName,
 	)
 
 	// NOTE: provider module needs to come after the staking module, since
@@ -663,6 +782,10 @@ func New(
 		vestingtypes.ModuleName,
 		providertypes.ModuleName,
 		launchpadtypes.ModuleName,
+		ibctransfertypes.ModuleName,
+		intertxtypes.ModuleName,
+		icatypes.ModuleName,
+		ibcfeetypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -693,6 +816,10 @@ func New(
 		consensusparamtypes.ModuleName,
 		crisistypes.ModuleName, // crisis needs to be last so that the genesis state is consistent when it checks invariants
 		launchpadtypes.ModuleName,
+		ibctransfertypes.ModuleName,
+		intertxtypes.ModuleName,
+		icatypes.ModuleName,
+		ibcfeetypes.ModuleName,
 	)
 
 	app.MM.RegisterInvariants(&app.CrisisKeeper)
@@ -1088,6 +1215,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibcexported.ModuleName)
 	paramsKeeper.Subspace(providertypes.ModuleName)
 	paramsKeeper.Subspace(launchpadtypes.ModuleName)
+	paramsKeeper.Subspace(intertxtypes.ModuleName)
 
 	return paramsKeeper
 }

@@ -44,6 +44,7 @@ func (k Keeper) CreateNewPool(ctx context.Context, msg *types.MsgCreatePool) (*t
 		TokenDenom:  msg.TokenDenom,
 		Creator:     msg.FromAddress,
 		PairDenom:   msg.PairDenom,
+		TargetChain: msg.TargetChain,
 		PoolAddress: poolAddress.String(),
 		TokenInformation: &types.TokenInformation{
 			Description: msg.Description,
@@ -116,7 +117,6 @@ func (k Keeper) DeletePool(ctx context.Context, poolID uint64) error {
 func (k Keeper) GetPools(ctx context.Context) ([]*types.BondingCurvePool, error) {
 	var res []*types.BondingCurvePool
 	err := k.pools.Walk(ctx, nil, func(key uint64, value types.BondingCurvePool) (stop bool, err error) {
-		k.logger.Info(fmt.Sprintf("walk: %d", key))
 		res = append(res, &value)
 		return false, nil
 	})

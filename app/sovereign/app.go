@@ -3,6 +3,10 @@ package app
 import (
 	"context"
 	"fmt"
+	icakeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/keeper"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
+	icacontrolkeeper "github.com/cosmos/interchain-security/v6/x/intertx/keeper"
+	icacontroltypes "github.com/cosmos/interchain-security/v6/x/intertx/types"
 	"github.com/cosmos/interchain-security/v6/x/launchpad"
 	launchpadkeeper "github.com/cosmos/interchain-security/v6/x/launchpad/keeper"
 	launchpadtypes "github.com/cosmos/interchain-security/v6/x/launchpad/types"
@@ -210,12 +214,14 @@ type App struct { // nolint: golint
 	TransferKeeper        ibctransferkeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	AuthzKeeper           authzkeeper.Keeper
+	IcaControllerKeeper   icakeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 
-	LaunchpadKeeper launchpadkeeper.Keeper
+	IcaControlKeeper icacontrolkeeper.Keeper
+	LaunchpadKeeper  launchpadkeeper.Keeper
 
 	// the module manager
 	MM *module.Manager
@@ -268,6 +274,7 @@ func New(
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey,
 		capabilitytypes.StoreKey, authzkeeper.StoreKey, consensusparamtypes.StoreKey, launchpadtypes.StoreKey,
+		icatypes.StoreKey,
 	)
 	tkeys := storetypes.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -484,11 +491,36 @@ func New(
 
 	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
 
+	icaControllerKeeper := icakeeper.NewKeeper(
+		appCodec,
+		keys[icatypes.StoreKey],
+		app.GetSubspace(icatypes.SubModuleName),
+		app.IBCKeeper.ChannelKeeper,
+		app.IBCKeeper.ChannelKeeper,
+		app.IBCKeeper.PortKeeper,
+		app.ScopedIBCKeeper,
+		app.MsgServiceRouter(),
+		"",
+	)
+	app.IcaControlKeeper = icacontrolkeeper.NewKeeper(
+		runtime.NewKVStoreService(keys[icacontroltypes.StoreKey]),
+		appCodec,
+		keys[icacontroltypes.StoreKey],
+		app.AccountKeeper,
+		icaControllerKeeper,
+		app.ScopedIBCKeeper,
+		app.GetSubspace(icacontroltypes.ModuleName),
+		app.IBCKeeper.ChannelKeeper,
+		app.TransferKeeper,
+		runtime.EventService{},
+		logger,
+	)
 	app.LaunchpadKeeper = launchpadkeeper.NewKeeper(
 		runtime.NewKVStoreService(keys[launchpadtypes.StoreKey]),
 		appCodec,
 		app.AccountKeeper,
 		app.BankKeeper,
+		app.IcaControlKeeper,
 		runtime.EventService{},
 		logger,
 	)

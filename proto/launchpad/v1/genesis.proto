@@ -21,6 +21,7 @@ message BondingCurvePool {
   string poolAddress = 7;
   bool isListed = 8;
   TokenInformation tokenInformation = 9;
+  uint64 targetChain = 10;
 }
 
 message TokenInformation {
