@@ -160,7 +160,7 @@ require (
 	github.com/informalsystems/itf-go v0.0.1
 	github.com/osmosis-labs/osmosis/osmomath v0.0.14
 	github.com/spf13/viper v1.19.0
-	golang.org/x/mod v0.21.0
+	golang.org/x/mod v0.22.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240814211410-ddb44dafa142
 	google.golang.org/protobuf v1.35.1
 )
@@ -184,7 +184,6 @@ require (
 	github.com/cockroachdb/pebble v1.1.1 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/cosmos/interchain-accounts v0.5.1 // indirect
 	github.com/creachadair/atomicfile v0.3.1 // indirect
 	github.com/creachadair/tomledit v0.0.24 // indirect
 	github.com/dgraph-io/badger/v4 v4.2.0 // indirect
