@@ -6,7 +6,7 @@ toolchain go1.23.2
 
 require (
 	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/math v1.3.0
+	cosmossdk.io/math v1.4.0
 	github.com/cometbft/cometbft v0.38.12
 	github.com/cometbft/cometbft-db v0.12.0 // indirect
 	github.com/cosmos/cosmos-sdk v0.50.9
@@ -36,7 +36,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	cloud.google.com/go/iam v1.1.10 // indirect
 	cloud.google.com/go/storage v1.41.0 // indirect
-	cosmossdk.io/api v0.7.5
+	cosmossdk.io/api v0.7.6
 	cosmossdk.io/core v1.0.0-alpha.4
 	cosmossdk.io/depinject v1.0.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -158,7 +158,7 @@ require (
 	github.com/cosmos/ibc-go/modules/capability v1.0.1
 	github.com/cosmos/ibc-go/v8 v8.5.1
 	github.com/informalsystems/itf-go v0.0.1
-	github.com/osmosis-labs/osmosis/osmomath v0.0.14
+	github.com/osmosis-labs/osmosis/osmomath v0.0.16
 	github.com/spf13/viper v1.19.0
 	golang.org/x/mod v0.21.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240814211410-ddb44dafa142
@@ -184,7 +184,6 @@ require (
 	github.com/cockroachdb/pebble v1.1.1 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/cosmos/interchain-accounts v0.5.1 // indirect
 	github.com/creachadair/atomicfile v0.3.1 // indirect
 	github.com/creachadair/tomledit v0.0.24 // indirect
 	github.com/dgraph-io/badger/v4 v4.2.0 // indirect
