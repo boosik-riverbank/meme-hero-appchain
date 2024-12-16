@@ -145,7 +145,7 @@ require (
 )
 
 require (
-	cosmossdk.io/client/v2 v2.0.0-beta.3
+	cosmossdk.io/client/v2 v2.0.0-beta.7
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/store v1.1.1
@@ -184,7 +184,6 @@ require (
 	github.com/cockroachdb/pebble v1.1.1 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/cosmos/interchain-accounts v0.5.1 // indirect
 	github.com/creachadair/atomicfile v0.3.1 // indirect
 	github.com/creachadair/tomledit v0.0.24 // indirect
 	github.com/dgraph-io/badger/v4 v4.2.0 // indirect
